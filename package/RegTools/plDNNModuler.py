@@ -2,7 +2,7 @@ import torch as th
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-import pytorch_lightning as pl
+import lightning.pytorch as pl
 from collections import OrderedDict
 import json
 
