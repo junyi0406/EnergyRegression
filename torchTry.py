@@ -1,7 +1,7 @@
 import torch as th
-import pytorch_lightning as pl
-from pytorch_lightning import seed_everything
-from pytorch_lightning.callbacks.early_stopping import EarlyStopping
+import lightning.pytorch as pl
+from lightning.pytorch import seed_everything
+from lightning.pytorch.callbacks.early_stopping import EarlyStopping
 from argparse import ArgumentParser
 import sys
 sys.path.append("..")
@@ -43,16 +43,22 @@ def main():
     # parser.add_argument('--output_folder', type=str, default='/home/JYChen/EnergyRegression/samples/results/')
     # parser.add_argument('--test_input', type=str, default='DoubleElectron_ECALIdealIC_PostEE_124X_30032023.root')
     # parser.add_argument('--test_output', type=str, default='DoubleElectron_ECALIdealIC_PostEE_124X_{region}_applied.pk')
+    parser.add_argument('--useDask', type=bool, default=False)
+    parser.add_argument('--fmt', type=str, default='ak')
+    
 
     # trainer arguments
     parser.add_argument('--target', type=str, default='{dfname}.mc_energy/{dfname}.sc_rawEnergy')
     parser.add_argument('--default_root_dir', type=str, default='./logs')
     parser.add_argument('--max_epochs', type=int, default=450)
-    parser.add_argument('--gpus', type=int, default=(-1 if th.cuda.is_available() else 0))
+    parser.add_argument('--check_val_every_n_epoch', type=int, default=50)
+    parser.add_argument('--gpus', type=int, default=(1 if th.cuda.is_available() else 0))
+    parser.add_argument('--devices', type=int, default=1)
+    parser.add_argument('--accelerator', type=str, default="auto")
     parser.add_argument('--auto_select_gpus', type=bool, default=True)
     parser.add_argument('--deterministic', type=bool, default=True)
     parser.add_argument('--batch_size', type=int, default=512)
-    parser.add_argument('--num_workers', type=int, default=6)
+    parser.add_argument('--num_workers', type=int, default=20)
     parser.add_argument('--learning_rate', type=float, default=0.02)
 
     # debug parameters - enable fast_dev_run for quick sanity check of the training loop
