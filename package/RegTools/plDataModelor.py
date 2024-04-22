@@ -1,6 +1,6 @@
 from pathlib import Path
 import torch as th
-import pytorch_lightning as pl
+import lightning.pytorch as pl
 import pandas as pd
 from sklearn import preprocessing
 from torch.utils.data import TensorDataset, DataLoader, random_split, sampler
@@ -23,12 +23,21 @@ class PlDataModule(pl.LightningDataModule):
         import pandas as pd
         dataset = pd.DataFrame()
         table = {}
-        df = df[df.sc_isEB == (1 if region == "eb" else 0)]
-        for idx, var in enumerate(vars):
-            dataset[f"var{idx}"] = eval(var.format(dfname = "df"))
-            table[f"var{idx}"] = var.format(dfname = "").replace(".", "")
-        dataset["target"] = eval(target.format(dfname = "df"))
+        if self.hparams.fmt == "pd":
+            df = df[df.sc_isEB == (1 if region == "eb" else 0)]
+            for idx, var in enumerate(vars):
+                dataset[f"var{idx}"] = eval(var.replace(".", "_").format(dfname = "df."))
+                table[f"var{idx}"] = var.format(dfname = "").replace(".", "")
+            dataset["target"] = eval(target.replace(".", "_").format(dfname = "df."))
+        elif self.hparams.fmt == "ak":
+            df = df[df.sc_isEB == (1 if region == "eb" else 0)]
+            for idx, var in enumerate(vars):
+                dataset[f"var{idx}"] = eval(var.format(dfname = "df."))
+                table[f"var{idx}"] = var.format(dfname = "")
+            dataset["target"] = eval(target.format(dfname = "df."))
+    
         dataset = dataset.sample(frac=0.6, random_state=int(time.time()))
+            
         # dataset.pop("isEB")
         return (table, dataset)
     
@@ -38,7 +47,7 @@ class PlDataModule(pl.LightningDataModule):
         # df = pd.read_csv(input_file)
         reader = TreeOperator()
         reader.set_names(input_file, treename=self.conf["treeName"])
-        df = reader.read_minitree(self.conf, fmt="pd", debug = self.debug)
+        df = reader.read_minitree(self.conf, fmt=self.hparams.fmt, debug = self.debug)
         var_table, df = self.setup_dataset(df, self.region, self.conf[f"var_{self.region}"], self.hparams.target)
         
         nrow, ncol = df.shape
