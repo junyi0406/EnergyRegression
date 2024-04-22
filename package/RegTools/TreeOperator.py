@@ -19,12 +19,15 @@ class TreeOperator:
             df = tree.arrays(conf["branches"], library=fmt, entry_stop=10000)
         else:
             df = tree.arrays(conf["branches"], library=fmt,)
-        dfs = []
-        for branch in conf["branches"]:
-            obj = eval(f"ak.to_dataframe(df.{branch})")
-            obj = obj.rename(columns={oldname: f"{branch}_{oldname}" for oldname in obj.columns})
-            dfs.append(obj)
-        return pd.concat(dfs, axis=axis)
+        if self.hparams.fmt == "pd":
+            dfs = []
+            for branch in conf["branches"]:
+                obj = eval(f"ak.to_dataframe(df.{branch})")
+                obj = obj.rename(columns={oldname: f"{branch}_{oldname}" for oldname in obj.columns})
+                dfs.append(obj)
+            return pd.concat(dfs, axis=axis)
+        else:
+            return df
     
 
     def read_minitree(self, conf, fmt="", debug=False, useDask = False):
@@ -35,6 +38,8 @@ class TreeOperator:
         #     return self.read_to(ttree = tree, debug=debug )
         
         if useDask:
+            if self.hparams.fmt == "ak":
+                raise TypeError("dask didn't support awkward type array")
             if isinstance(self.file_path, list):
                 df_merged = []
                 for i, filename in enumerate(self.file_path):
